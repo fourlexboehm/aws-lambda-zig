@@ -48,7 +48,7 @@ pub const Server = struct {
             return initFailed(arena_alloc, null, error.MissingRuntimeOrigin, "Missing the runtime’s API origin URL");
         };
 
-        self.http = HttpClient.init(gpa_alloc, api_origin) catch |err| {
+        HttpClient.init(&self.http, gpa_alloc, api_origin) catch |err| {
             return initFailed(arena_alloc, null, err, "Creating a HTTP client failed");
         };
     }
@@ -134,8 +134,8 @@ pub const Server = struct {
     }
 
     pub fn respondFailure(self: *Server, err: anyerror, trace: ?*std.builtin.StackTrace) !void {
-        if (trace) |t| {
-            log.err("The handler returned an error `{s}`.{f}", .{ @errorName(err), t });
+        if (trace) |_| {
+            log.err("The handler returned an error `{s}`.", .{@errorName(err)});
         } else {
             log.err("The handler returned an error `{s}`.", .{@errorName(err)});
         }
@@ -203,7 +203,7 @@ pub const Server = struct {
         body: std.http.BodyWriter,
         arena: std.mem.Allocator,
 
-        pub fn writer(self: *Stream) *std.io.Writer {
+        pub fn writer(self: *Stream) *std.Io.Writer {
             return &self.body.writer;
         }
 

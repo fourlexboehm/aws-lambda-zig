@@ -21,5 +21,5 @@ fn parseAndPutVar(map: *std.process.EnvMap, line: [*]u8) !void {
     while (line[end_i] != 0) : (end_i += 1) {}
     const value = line[line_i + 1 .. end_i];
 
-    try map.putMove(key, value);
+    try map.put(key, value);
 }
