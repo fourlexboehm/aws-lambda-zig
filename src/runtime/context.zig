@@ -19,7 +19,7 @@ pub const Context = struct {
     config: ConfigMeta = .{},
     /// Request metadata of the invocation.
     request: RequestMeta = .{},
-
+    io: *const std.Io,
     _force_destroy: *bool,
     _kv: *const std.process.EnvMap = undefined,
 

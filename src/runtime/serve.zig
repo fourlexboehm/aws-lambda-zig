@@ -98,6 +98,7 @@ pub const Server = struct {
             .gpa = self.gpa.allocator(),
             .arena = self.arena.allocator(),
             ._force_destroy = &force_terminate,
+            .io = &self.http.threaded.io(),
         };
         ctx.loadMeta(&context, &self.env);
 
