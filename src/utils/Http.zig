@@ -2,6 +2,7 @@
 const std = @import("std");
 const testing = std.testing;
 const Client = std.http.Client;
+const Io = std.Io;
 const Threaded = std.Io.Threaded;
 const Allocator = std.mem.Allocator;
 const builtin = @import("builtin");
@@ -18,11 +19,10 @@ const USER_AGENT = std.fmt.comptimePrint(
     .{ package_version, builtin.zig_version_string },
 );
 
-threaded: Threaded,
 client: Client,
 uri: std.Uri,
 
-pub fn init(self: *Self, gpa: Allocator, origin: []const u8) !void {
+pub fn init(self: *Self, gpa: Allocator, origin: []const u8, io: Io) !void {
     const idx = std.mem.indexOfScalar(u8, origin, ':');
     self.uri = std.Uri{
         .path = .{ .percent_encoded = "" },
@@ -34,16 +34,11 @@ pub fn init(self: *Self, gpa: Allocator, origin: []const u8) !void {
             null,
     };
 
-    self.threaded = Threaded.init(gpa);
-    errdefer self.threaded.deinit();
-
-    const io = self.threaded.io();
     self.client = Client{ .allocator = gpa, .io = io };
 }
 
 pub fn deinit(self: *Self) void {
     self.client.deinit();
-    self.threaded.deinit();
     self.* = undefined;
 }
 

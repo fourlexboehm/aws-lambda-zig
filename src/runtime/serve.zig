@@ -20,6 +20,8 @@ pub const Options = struct {};
 pub const Server = struct {
     gpa: std.heap.GeneralPurposeAllocator(.{}),
     arena: std.heap.ArenaAllocator,
+    threaded: std.Io.Threaded,
+    io: std.Io,
     http: HttpClient,
     env: std.process.EnvMap,
     request_id: []const u8 = "",
@@ -48,7 +50,13 @@ pub const Server = struct {
             return initFailed(arena_alloc, null, error.MissingRuntimeOrigin, "Missing the runtime’s API origin URL");
         };
 
-        HttpClient.init(&self.http, gpa_alloc, api_origin) catch |err| {
+        // Initialize threaded IO - owned by Server
+        self.threaded = std.Io.Threaded.init(gpa_alloc);
+        errdefer self.threaded.deinit();
+
+        self.io = self.threaded.io();
+
+        HttpClient.init(&self.http, gpa_alloc, api_origin, self.io) catch |err| {
             return initFailed(arena_alloc, null, err, "Creating a HTTP client failed");
         };
     }
@@ -57,6 +65,7 @@ pub const Server = struct {
         self.http.deinit();
         self.env.deinit();
         self.arena.deinit();
+        self.threaded.deinit();
 
         switch (self.gpa.deinit()) {
             .ok => {},
@@ -98,7 +107,7 @@ pub const Server = struct {
             .gpa = self.gpa.allocator(),
             .arena = self.arena.allocator(),
             ._force_destroy = &force_terminate,
-            .io = &self.http.threaded.io(),
+            .io = &self.io,
         };
         ctx.loadMeta(&context, &self.env);
 
