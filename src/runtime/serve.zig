@@ -51,7 +51,7 @@ pub const Server = struct {
         };
 
         // Initialize threaded IO - owned by Server
-        self.threaded = std.Io.Threaded.init(gpa_alloc);
+        self.threaded = std.Io.Threaded.init(gpa_alloc, .{});
         errdefer self.threaded.deinit();
 
         self.io = self.threaded.io();
